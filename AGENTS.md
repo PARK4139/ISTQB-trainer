@@ -2,11 +2,11 @@
 
 ## 프로젝트 구성
 
-이 저장소는 ISTQB CTFL v4.0.1 한국어 학습 자료 모음입니다. 7일 학습 가이드와 스타일, 학습 콘텐츠, 퀴즈 데이터, 브라우저 동작은 `istqb_ctfl_7day_learning.html` 한 파일에 들어 있습니다. 저장소 최상위에는 기준 자료인 `1. ISTQB_CTFL_Syllabus_v4.0.1.pdf`와 `ISTQB_Exam-Structures-and-Rules_v1.2.pdf`가 있습니다. 공식 샘플 시험 A~D 160문항과 A 세트 추가 문항 26개의 문제·정답·해설은 `istqb_ctfl_7day_learning.html`에 내장되어 있습니다. 표와 도표가 포함된 원문 페이지 이미지도 HTML 안에 있어 별도 샘플 시험 폴더 없이 동작합니다. 별도의 소스, 테스트, 에셋 디렉터리는 없습니다.
+이 저장소는 ISTQB CTFL v4.0.1 한국어 학습 자료 모음입니다. 7일 학습 가이드와 스타일, 학습 콘텐츠, 퀴즈 데이터, 브라우저 동작은 `istqb_ctfl_7day_learning.html` 한 파일에 들어 있습니다. `scripts/`에는 로컬 웹 서버 실행 스크립트가 있습니다. 저장소 최상위에는 기준 자료인 `1. ISTQB_CTFL_Syllabus_v4.0.1.pdf`와 `ISTQB_Exam-Structures-and-Rules_v1.2.pdf`가 있습니다. 공식 샘플 시험 A~D 160문항과 A 세트 추가 문항 26개의 문제·정답·해설은 HTML에 내장되어 별도 샘플 시험 폴더 없이 동작합니다.
 
 ## 실행 및 개발 명령
 
-빌드 시스템이나 패키지 관리자는 없습니다. HTML 파일을 최신 브라우저에서 직접 열어 학습 가이드를 사용할 수 있습니다. 로컬 서버가 필요하면 저장소 최상위에서 `python -m http.server 8000`을 실행하고 `http://localhost:8000/istqb_ctfl_7day_learning.html`에 접속합니다. 자동화된 테스트 명령은 없으므로 변경 후 관련 메뉴, 퀴즈, 학습 기록 저장·가져오기·내보내기, 모의고사, 공식 샘플 시험 A~D의 응시·채점·해설과 내장 표·도표 표시을 브라우저에서 확인합니다.
+빌드 시스템이나 패키지 관리자는 없습니다. `powershell -ExecutionPolicy Bypass -File .\scripts\run-web.ps1`로 로컬 서버와 브라우저를 실행합니다. Python 3이 없으면 Node.js로 정적 서버를 시작합니다. 기본 주소는 `http://localhost:8000/istqb_ctfl_7day_learning.html`입니다. 메모와 강의 완료·접힘 상태는 브라우저 로컬 저장소에 저장됩니다. 메모는 Tab 들여쓰기와 줄 복제·이동·삭제 편집 키를 지원합니다. 자동화된 테스트 명령은 없습니다.
 
 ## 코딩 스타일 및 파일 이름
 
