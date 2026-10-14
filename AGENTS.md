@@ -2,11 +2,11 @@
 
 ## 프로젝트 구성
 
-이 저장소는 ISTQB CTFL v4.0.1 한국어 학습 자료 모음입니다. 7일 학습 가이드와 스타일, 학습 콘텐츠, 퀴즈 데이터, 브라우저 동작은 `istqb_ctfl_7day_learning.html` 한 파일에 들어 있습니다. `scripts/`에는 로컬 웹 서버 실행 스크립트가 있습니다. 저장소 최상위에는 기준 자료인 `1. ISTQB_CTFL_Syllabus_v4.0.1.pdf`와 `ISTQB_Exam-Structures-and-Rules_v1.2.pdf`가 있습니다. 공식 샘플 시험 A~D 160문항과 A 세트 추가 문항 26개의 문제·정답·해설은 HTML에 내장되어 별도 샘플 시험 폴더 없이 동작합니다.
+이 저장소는 ISTQB CTFL v4.0.1 한국어 학습 자료 모음입니다. 학습 웹과 시험 데이터는 `istqb_ctfl_7day_learning.html`에 내장되어 있습니다. 화면은 DAY 01~06 통합 Issue 풀이·개념 복습과 DAY 07 모의고사로 구성됩니다. `content/locales.sqlite`는 UI 문구 번역 DB이고 `content/migrations/`에는 초기 스키마와 리소스가 있습니다. `scripts/`에는 리소스 조회·수정·빌드 및 로컬 웹 서버 스크립트가 있습니다. 공식 샘플 시험 A~D 160문항과 A 세트 추가 문항 26개 및 도표 이미지는 HTML에 내장되어 별도 샘플 시험 폴더 없이 동작합니다.
 
 ## 실행 및 개발 명령
 
-빌드 시스템이나 패키지 관리자는 없습니다. `powershell -ExecutionPolicy Bypass -File .\scripts\run-web.ps1`로 로컬 서버와 브라우저를 실행합니다. Python 3이 없으면 Node.js로 정적 서버를 시작합니다. 기본 주소는 `http://localhost:8000/istqb_ctfl_7day_learning.html`입니다. 메모와 강의 완료·접힘 상태는 브라우저 로컬 저장소에 저장됩니다. 메모는 Tab 들여쓰기와 줄 복제·이동·삭제 편집 키를 지원합니다. 자동화된 테스트 명령은 없습니다.
+Node.js 22.5 이상에서 `node scripts/locales.mjs init`으로 번역 DB를 만들고 `node scripts/build-locales.mjs`로 DB의 UI 문구를 HTML에 내장합니다. 문구 조회는 `node scripts/locales.mjs list`, 개별 수정은 `node scripts/locales.mjs set ko issue.title "새 제목"`, 일괄 SQL 수정은 `node scripts/locales.mjs sql "UPDATE locale_resource SET value=replace(value,'old','new') WHERE locale='ko'"`를 사용한 뒤 빌드합니다. `powershell -ExecutionPolicy Bypass -File .\scripts\run-web.ps1`은 생성된 HTML을 로컬에서 실행합니다. 메모와 학습 상태는 브라우저 로컬 저장소에 저장됩니다. 자동화된 테스트 명령은 없습니다.
 
 ## 코딩 스타일 및 파일 이름
 
