@@ -4,11 +4,15 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { getGoogleAnswer, getAllGoogleAnswers, saveGoogleAnswer, buildGoogleAnswers } from './google-answers.mjs';
 import { createStudyStore } from './study-store.mjs';
+import { createAllStrings, recoverInterrupted } from './all-strings.mjs';
 
 const root = path.resolve(process.argv[2] ?? path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', 'web'));
 const port = Number(process.argv[3] ?? 8000);
+const projectRoot=path.resolve(root,'..');
+recoverInterrupted(projectRoot);
 buildGoogleAnswers();
 const studyStore = createStudyStore(undefined,{deferExports:true});
+const allStrings=createAllStrings(projectRoot);
 function sendJson(response, status, data) {
   response.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
   response.end(JSON.stringify(data));
@@ -32,6 +36,23 @@ createServer(async (request, response) => {
     return;
   }
 
+  if (pathname.startsWith('/api/all-strings')) {
+    if(request.headers.origin&&request.headers.origin!==`http://${request.headers.host}`){sendJson(response,403,{error:'다른 사이트에서는 변경할 수 없습니다.'});return}
+    try{
+      if(request.method==='GET'&&pathname==='/api/all-strings/history'){sendJson(response,200,{history:allStrings.history()});return}
+      if(request.method!=='POST'||!['/api/all-strings/begin','/api/all-strings/apply','/api/all-strings/end','/api/all-strings/resume','/api/all-strings/restore'].includes(pathname)){sendJson(response,405,{error:'지원하지 않는 요청입니다.'});return}
+      if(request.headers['content-type']!=='application/json'){sendJson(response,415,{error:'JSON 형식이 필요합니다.'});return}
+      let size=0;const chunks=[];
+      for await(const chunk of request){size+=chunk.length;if(size>1_000_000){sendJson(response,413,{error:'요청이 너무 큽니다.'});return}chunks.push(chunk)}
+      let data;try{data=JSON.parse(Buffer.concat(chunks).toString('utf8'))}catch{sendJson(response,400,{error:'잘못된 JSON입니다.'});return}
+      const action=pathname.split('/').at(-1);
+      sendJson(response,200,action==='begin'?allStrings.begin(data.term):action==='apply'?allStrings.apply(data.id,data.replacement):action==='restore'?allStrings.restore(data.id):action==='resume'?allStrings.resume(data.id):allStrings.end(data.id));
+    }catch(error){console.error('전체 문자열 치환:',error.message);sendJson(response,error.status??500,{error:error.message})}
+    return;
+  }
+  if(allStrings.active&&pathname.startsWith('/api/')&&!['GET','HEAD'].includes(request.method)){
+    sendJson(response,409,{error:'전체 문자열 치환 편집을 먼저 종료하세요.'});return;
+  }
   if (pathname.startsWith('/api/texts')) {
     const origin = request.headers.origin;
     if (origin && origin !== `http://${request.headers.host}`) { sendJson(response,403,{error:'다른 사이트에서는 변경할 수 없습니다.'}); return; }
@@ -145,7 +166,7 @@ createServer(async (request, response) => {
 
   response.writeHead(200, { 'Content-Type': contentTypes[path.extname(target).toLowerCase()] ?? 'application/octet-stream' });
   createReadStream(target).pipe(response);
-}).listen(port, '127.0.0.1', () => {
-  console.log(`서버 실행 중: http://localhost:${port}/`);
+}).listen(port, '127.0.0.1', function() {
+  console.log(`서버 실행 중: http://localhost:${this.address().port}/`);
   console.log('종료하려면 Ctrl+C를 누르세요.');
 });

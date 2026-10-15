@@ -6,11 +6,16 @@ import { fileURLToPath } from 'node:url';
 import { DatabaseSync } from 'node:sqlite';
 import vm from 'node:vm';
 import { spawnSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { createStudyStore } from './study-store.mjs';
 
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const fixture=mkdtempSync(path.join(tmpdir(),'ctfl-global-edit-'));
 for(const name of ['scripts','web','content','notes'])cpSync(path.join(root,name),path.join(fixture,name),{recursive:true});
+// 개발 중인 HTML을 복제본의 시작 기준으로 지정한다. 실제 저장소의 충돌 상태는 건드리지 않는다.
+const fixtureDB=new DatabaseSync(path.join(fixture,'content','locales.sqlite'));
+if(fixtureDB.prepare("SELECT 1 FROM sqlite_master WHERE name='study_export'").get())fixtureDB.prepare('UPDATE study_export SET hash=?,pending_hash=NULL WHERE filename=?').run(createHash('sha256').update(readFileSync(path.join(fixture,'web','index.html'))).digest('hex'),'web/index.html');
+fixtureDB.close();
 let store=createStudyStore(fixture),content=store.content();
 const catalogue=content.catalogue();
 assert.ok(catalogue.length>1000);

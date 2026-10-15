@@ -6,6 +6,7 @@
 - 관리 규칙: `../../../3rd_party/pk_system/cores/common/rules/issue/lifecycle.py` 및 `issue_verification_artifact_location.py`.
 - 이 저장소에는 기존 handover/showreel 또는 Issue 큐가 없어 아래 요구사항 ID를 이 대화의 추적 기준으로 사용한다.
 - 구현 계획: [웹 전체 문구 편집 계획](../docs/global-text-editing-plan.md).
+- 후속 요구사항: [전체 문자열 치환과 고급설정](../docs/all-strings-stories.md). 사용자의 “웹의 모든 문자열을 무조건 치환” 및 “add user stories and do issues” 요청에 따라 AC-ALL / AC-SETTINGS / AC-RECOVERY를 추가한다. 전체 문자열 모드에서는 기존 비문구 제외보다 이 요구를 우선한다.
 
 | ID | 사용자 요구사항 |
 |---|---|

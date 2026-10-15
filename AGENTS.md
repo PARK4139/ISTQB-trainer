@@ -20,6 +20,8 @@ Node.js 22.5 이상에서 `node scripts/locales.mjs init`으로 번역 DB를 만
 
 ## 테스트 지침
 
+상단 고급설정의 전체 문자열 치환은 `scripts/all-strings.mjs`와 `scripts/all-strings-editor.js`에서 구현합니다. 앱 실행 원본과 DB의 문자열 값에는 코드·URL·ID 제외 규칙을 적용하지 않습니다. `.ctfl-recovery/`는 치환 범위 밖의 실행 독립적인 원본 사본이며 Git에 넣지 않습니다. `node scripts/test-all-strings.mjs`로 파일·DB 혼합 치환, 충돌·실패·중단 및 PowerShell 독립 복구를 검증합니다. 실제 사용자 자료로 치환 검증을 하지 않습니다.
+
 테스트 프레임워크나 커버리지 기준은 없습니다. 동작 변경은 최신 브라우저에서 해당 기능을 직접 확인합니다. 스타일 변경 시 좁은 화면도 점검하고, 한국어 표시와 학습 기록 저장이 정상인지 확인합니다.
 
 ## 커밋 및 풀 리퀘스트

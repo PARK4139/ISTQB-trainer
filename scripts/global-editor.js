@@ -7,13 +7,18 @@
   let replacements=[],painting=false,initialHydration=true;
   const settings=document.createElement('details');settings.className='global-settings';
   settings.innerHTML='<summary>고급설정</summary><label><input type="checkbox" id="globalTextEnabled"> 웹 전체 문구 편집</label><p class="tiny">ON: 문구 선택 후 Ctrl+Shift+L · 숨겨진 탭과 메모 포함</p><div id="globalTextConnection" class="tiny">저장 서버 확인 중</div><button type="button" class="btn ghost" id="globalTextHistory">문구 변경 이력</button><div id="globalHistoryList"></div>';
-  document.querySelector('.notes-panel').append(settings);
+  settings.id='advancedSettings';settings.hidden=true;
+  settings.setAttribute('aria-label','고급설정');
+  const settingsButton=document.createElement('button');settingsButton.type='button';settingsButton.className='btn ghost';settingsButton.id='advancedSettingsButton';settingsButton.textContent='고급설정';settingsButton.setAttribute('aria-expanded','false');settingsButton.setAttribute('aria-controls','advancedSettings');
+  document.querySelector('.top-ctrl').prepend(settingsButton);document.body.append(settings);
+  settingsButton.addEventListener('click',()=>{settings.hidden=!settings.hidden;settings.open=!settings.hidden;settingsButton.setAttribute('aria-expanded',String(!settings.hidden))});
   const panel=document.createElement('section');panel.id='globalTextPanel';panel.hidden=true;
   panel.setAttribute('aria-label','웹 전체 문구 편집');
   panel.innerHTML='<div class="flexrow"><strong id="globalTargetCount"></strong><button type="button" class="btn ghost" id="globalTextClose">편집 종료 · Esc</button></div><p class="tiny">입력 즉시 전체 대상에 반영 · Ctrl+Z 실행 취소 · Ctrl+Y 다시 실행</p><textarea id="globalTextInput" aria-label="전체 문구 동시 편집"></textarea><div id="globalTextStatus" role="status"></div><div class="buttons"><button type="button" class="btn" id="globalTextRetry" hidden>저장 재시도</button><button type="button" class="btn" id="globalTextExport" hidden>내보내기 재시도</button><button type="button" class="btn" id="globalTextRecover" hidden>미저장 편집 복구</button><button type="button" class="btn" id="globalTextDiscard" hidden>미저장 편집 보관 후 종료</button></div><details><summary>변경 대상 위치</summary><ul id="globalTargetList"></ul></details>';
   document.body.append(panel);
   const style=document.createElement('style');style.textContent='.global-settings{border-top:1px solid var(--border);padding-top:12px}.global-settings summary{cursor:pointer}.global-settings input{accent-color:var(--accent)}#globalTextPanel{position:fixed;z-index:50;bottom:16px;left:clamp(12px,10vw,220px);right:clamp(12px,10vw,220px);max-height:65vh;overflow:auto;padding:18px;background:var(--panel);border:2px solid var(--accent);border-radius:12px;box-shadow:0 12px 45px #0008}#globalTextPanel[hidden]{display:none}#globalTextPanel .CodeMirror{height:85px;border:1px solid var(--border);background:var(--panel2);color:var(--text)}#globalTargetList{font-size:12px;max-height:120px;overflow:auto}#globalTextStatus{padding:8px 0;color:var(--accent2)}.global-history-item{font-size:12px;padding:8px 0;border-top:1px solid var(--border)}.source-override-note{font-size:12px;color:var(--accent2)}';document.head.append(style);
   style.textContent+='#globalTextPanel [hidden]{display:none!important}';
+  style.textContent+='#advancedSettings{position:fixed;z-index:60;top:76px;right:16px;width:min(420px,calc(100vw - 32px));max-height:75vh;overflow:auto;padding:18px;background:var(--panel);border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow)}#advancedSettings[hidden]{display:none}#advancedSettings>summary{display:none}.top-ctrl{flex-wrap:wrap}.all-strings-active{color:var(--hover-pink,#f08fbe)!important;border-color:var(--hover-pink,#f08fbe)!important}';
   const toggle=document.getElementById('globalTextEnabled'),status=document.getElementById('globalTextStatus');
   const retry=document.getElementById('globalTextRetry'),exportButton=document.getElementById('globalTextExport');
   const recover=document.getElementById('globalTextRecover'),discard=document.getElementById('globalTextDiscard');
@@ -188,6 +193,7 @@
     const result=await request('/api/texts');records=[];applyRecords(result.records);return result.records;
   }
   async function startGlobal(cm){
+    if(window.studyAllStringsEnabled)return window.startAllStrings(cm);
     if(!enabled){selectAllNoteOccurrences(cm||notesEditor);return}
     if(session||loading)return;
     let term=cm?.getSelection()||window.getSelection()?.toString()||'';

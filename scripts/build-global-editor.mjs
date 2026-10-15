@@ -7,7 +7,7 @@ const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const file=path.join(root,'web','index.html');
 let html=readFileSync(file,'utf8');
 const previousHash=createHash('sha256').update(html).digest('hex');
-const source=readFileSync(path.join(root,'scripts','global-editor.js'),'utf8');
+const source=readFileSync(path.join(root,'scripts','global-editor.js'),'utf8')+'\n'+readFileSync(path.join(root,'scripts','all-strings-editor.js'),'utf8');
 const script='<script id="globalTextEditor">\n'+source+'\n</script>';
 if(html.includes('<script id="globalTextEditor">'))html=html.replace(/<script id="globalTextEditor">[\s\S]*?<\/script>/,()=>script);
 else html=html.replace('</body>',()=>script+'\n</body>');
