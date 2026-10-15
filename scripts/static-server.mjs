@@ -3,9 +3,11 @@ import { createHash } from 'node:crypto';
 import { createServer } from 'node:http';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { getGoogleAnswer, getAllGoogleAnswers, saveGoogleAnswer, buildGoogleAnswers } from './google-answers.mjs';
 
 const root = path.resolve(process.argv[2] ?? path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', 'web'));
 const port = Number(process.argv[3] ?? 8000);
+buildGoogleAnswers();
 const notesPath = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', 'notes', 'study-notes.md');
 function readNotes() {
   let text = '';
@@ -32,6 +34,41 @@ createServer(async (request, response) => {
     pathname = decodeURIComponent(new URL(request.url, 'http://localhost').pathname);
   } catch {
     response.writeHead(400).end('Bad Request');
+    return;
+  }
+
+  if (pathname === '/api/google-answers' || pathname.startsWith('/api/google-answers/')) {
+    const origin = request.headers.origin;
+    if (origin && origin !== `http://${request.headers.host}`) {
+      sendJson(response, 403, { error: '다른 사이트에서는 답변을 변경할 수 없습니다.' });
+      return;
+    }
+    const id = pathname.slice('/api/google-answers/'.length);
+    try {
+      if (request.method === 'GET') sendJson(response, 200, pathname === '/api/google-answers' ? getAllGoogleAnswers() : getGoogleAnswer(id));
+      else if (request.method === 'PUT') {
+        if (request.headers['content-type'] !== 'application/json') {
+          sendJson(response, 415, { error: 'JSON 형식이 필요합니다.' });
+          return;
+        }
+        const chunks = [];
+        let size = 0;
+        for await (const chunk of request) {
+          size += chunk.length;
+          if (size > 250_000) {
+            sendJson(response, 413, { error: '답변이 너무 깁니다. 5만 자 이하로 입력해 주세요.' });
+            return;
+          }
+          chunks.push(chunk);
+        }
+        let data;
+        try { data = JSON.parse(Buffer.concat(chunks).toString('utf8')); }
+        catch { sendJson(response, 400, { error: '잘못된 JSON입니다.' }); return; }
+        sendJson(response, 200, saveGoogleAnswer(id, data?.answer, data?.revision));
+      } else sendJson(response, 405, { error: '지원하지 않는 요청입니다.' });
+    } catch (error) {
+      sendJson(response, error.status ?? 500, { error: error.status ? error.message : '답변 파일을 읽거나 저장할 수 없습니다.' });
+    }
     return;
   }
 

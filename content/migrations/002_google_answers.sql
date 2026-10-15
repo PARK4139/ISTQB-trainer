@@ -1,0 +1,15 @@
+INSERT INTO locale_resource(locale, resource_key, value, context) VALUES
+  ('ko', 'google.add', 'Google 답변 추가', 'Google AI 답변 추가 버튼'),
+  ('ko', 'google.edit', '답변 수정', 'Google AI 답변 수정 버튼'),
+  ('ko', 'google.search', 'Google에서 질문 검색 ↗', '문항 검색 링크'),
+  ('ko', 'google.placeholder', 'Google 검색의 AI 답변을 복사해 여기에 붙여넣으세요.', 'Google 답변 입력 안내'),
+  ('ko', 'google.hint', 'Google 검색에서 직접 복사한 참고 답변입니다.', '사용자가 붙여넣은 Google 답변 설명'),
+  ('ko', 'google.save', '답변 저장', 'Google 답변 저장 버튼'),
+  ('ko', 'google.cancel', '취소', 'Google 답변 편집 취소'),
+  ('ko', 'google.delete', '답변 삭제', 'Google 답변 삭제 버튼'),
+  ('ko', 'google.deleteConfirm', '저장한 Google 답변을 삭제할까요?', 'Google 답변 삭제 확인'),
+  ('ko', 'google.loading', '불러오는 중…', 'Google 답변 로드 상태'),
+  ('ko', 'google.saving', '저장 중…', 'Google 답변 저장 상태'),
+  ('ko', 'google.saved', '저장됨', 'Google 답변 저장 완료'),
+  ('ko', 'google.failed', '파일에 저장하지 못했습니다. 입력한 내용은 유지됩니다. run.cmd로 실행했는지 확인해 주세요.', 'Google 답변 저장 실패 안내'),
+  ('ko', 'google.empty', 'Google 답변을 붙여넣어 주세요.', '빈 답변 저장 안내');
