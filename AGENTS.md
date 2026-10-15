@@ -6,11 +6,11 @@
 
 ## 실행 및 개발 명령
 
-Node.js 22.5 이상에서 `node scripts/locales.mjs init`으로 번역 DB를 만들고 `node scripts/build-locales.mjs`로 DB의 UI 문구를 HTML에 내장합니다. 문구 조회는 `node scripts/locales.mjs list`, 개별 수정은 `node scripts/locales.mjs set ko issue.title "새 제목"`, 일괄 SQL 수정은 `node scripts/locales.mjs sql "UPDATE locale_resource SET value=replace(value,'old','new') WHERE locale='ko'"`를 사용한 뒤 빌드합니다. `powershell -ExecutionPolicy Bypass -File .\scripts\run-web.ps1`은 생성된 HTML을 로컬에서 실행합니다. 메모와 학습 상태는 브라우저 로컬 저장소에 저장됩니다. 자동화된 테스트 명령은 없습니다.
+Node.js 22.5 이상에서 `node scripts/locales.mjs init`으로 번역 DB를 만들고 `node scripts/build-locales.mjs`로 DB의 UI 문구를 HTML에 내장합니다. 문구 조회는 `node scripts/locales.mjs list`, 개별 수정은 `node scripts/locales.mjs set ko issue.title "새 제목"`, 일괄 SQL 수정은 `node scripts/locales.mjs sql "UPDATE locale_resource SET value=replace(value,'old','new') WHERE locale='ko'"`를 사용한 뒤 빌드합니다. `powershell -ExecutionPolicy Bypass -File .\scripts\run-web.ps1`은 생성된 HTML을 로컬에서 실행합니다. 학습 메모는 로컬 Node.js 서버를 통해 notes/study-notes.md에 자동 저장하며 Git으로 관리합니다. 학습 상태는 브라우저 로컬 저장소에 저장됩니다. 자동화된 테스트 명령은 없습니다.
 
 ## 코딩 스타일 및 파일 이름
 
-특별한 필요가 없다면 의존성 없는 단일 HTML 파일 구성을 유지합니다. 한국어가 깨지지 않도록 UTF-8 인코딩을 사용합니다. 기존 코드에 맞춰 마크업과 스크립트는 두 칸 들여쓰기를 사용하고, JavaScript 식별자는 명확한 camelCase, CSS 클래스는 kebab-case로 작성합니다. 학습 기록 파일은 테스트 픽스처로 의도해 추가하는 경우가 아니면 저장소에 넣지 않습니다.
+특별한 필요가 없다면 의존성 없는 단일 HTML 파일 구성을 유지합니다. 한국어가 깨지지 않도록 UTF-8 인코딩을 사용합니다. 기존 코드에 맞춰 마크업과 스크립트는 두 칸 들여쓰기를 사용하고, JavaScript 식별자는 명확한 camelCase, CSS 클래스는 kebab-case로 작성합니다. 학습 메모 파일 notes/study-notes.md는 저장소에 포함합니다. 그 밖의 학습 기록 파일은 테스트 픽스처로 의도해 추가하는 경우가 아니면 저장소에 넣지 않습니다.
 
 ## 테스트 지침
 
