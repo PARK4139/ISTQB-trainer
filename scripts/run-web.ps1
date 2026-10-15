@@ -1,8 +1,9 @@
 ﻿$ErrorActionPreference = 'Stop'
 
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
+$webRoot = Join-Path $repoRoot 'web'
 $port = 8000
-$url = "http://localhost:$port/istqb_ctfl_7day_learning.html"
+$url = "http://localhost:$port/"
 
 $python = Get-Command py -ErrorAction SilentlyContinue
 $node = Get-Command node -ErrorAction SilentlyContinue
@@ -20,10 +21,10 @@ Start-Process $url
 
 if ($python) {
   if ($python.Name -eq 'py') {
-    & $python.Source -3 -m http.server $port --directory $repoRoot
+    & $python.Source -3 -m http.server $port --directory $webRoot
   } else {
-    & $python.Source -m http.server $port --directory $repoRoot
+    & $python.Source -m http.server $port --directory $webRoot
   }
 } else {
-  & $node.Source (Join-Path $PSScriptRoot 'static-server.mjs') $repoRoot $port
+  & $node.Source (Join-Path $PSScriptRoot 'static-server.mjs') $webRoot $port
 }

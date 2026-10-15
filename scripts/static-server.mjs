@@ -3,7 +3,7 @@ import { createServer } from 'node:http';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const root = path.resolve(process.argv[2] ?? path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..'));
+const root = path.resolve(process.argv[2] ?? path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', 'web'));
 const port = Number(process.argv[3] ?? 8000);
 const contentTypes = {
   '.css': 'text/css; charset=utf-8',
@@ -24,7 +24,7 @@ createServer((request, response) => {
     return;
   }
 
-  const target = path.resolve(root, `.${pathname}`);
+  const target = path.resolve(root, `.${pathname === '/' ? '/index.html' : pathname}`);
   if (target !== root && !target.startsWith(`${root}${path.sep}`)) {
     response.writeHead(403).end('Forbidden');
     return;
@@ -43,6 +43,6 @@ createServer((request, response) => {
   response.writeHead(200, { 'Content-Type': contentTypes[path.extname(target).toLowerCase()] ?? 'application/octet-stream' });
   createReadStream(target).pipe(response);
 }).listen(port, '127.0.0.1', () => {
-  console.log(`서버 실행 중: http://localhost:${port}/istqb_ctfl_7day_learning.html`);
+  console.log(`서버 실행 중: http://localhost:${port}/`);
   console.log('종료하려면 Ctrl+C를 누르세요.');
 });

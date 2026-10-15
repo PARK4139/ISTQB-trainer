@@ -5,7 +5,7 @@ import { DatabaseSync } from 'node:sqlite';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const databasePath = path.join(root, 'content', 'locales.sqlite');
-const htmlPath = path.join(root, 'istqb_ctfl_7day_learning.html');
+const htmlPath = path.join(root, 'web', 'index.html');
 const locale = process.argv.find((arg) => arg.startsWith('--locale='))?.slice('--locale='.length) ?? 'ko';
 const html = readFileSync(htmlPath, 'utf8');
 const appStart = html.indexOf("<script>\n'use strict';");

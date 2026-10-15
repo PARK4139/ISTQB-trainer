@@ -6,7 +6,8 @@ ISTQB CTFL v4.0.1 학습용 정적 웹 앱입니다. DAY 01~06 통합 Issue 풀�
 
 ```text
 .
-├── istqb_ctfl_7day_learning.html  # 웹 앱 진입점 및 학습·시험 데이터
+├── web/
+│   └── index.html                # 웹 앱 진입점 및 학습·시험 데이터
 ├── content/
 │   ├── locales.sqlite             # UI 문구 데이터베이스
 │   └── migrations/                # 로케일 DB 스키마와 초기 리소스
@@ -15,7 +16,6 @@ ISTQB CTFL v4.0.1 학습용 정적 웹 앱입니다. DAY 01~06 통합 Issue 풀�
 │   ├── build-locales.mjs          # DB 문구를 HTML에 반영
 │   ├── run-web.ps1                # 로컬 실행 진입점
 │   └── static-server.mjs          # Node.js 정적 파일 서버
-├── ISTQB_Exam-Structures-and-Rules_v1.2.pdf
 └── AGENTS.md                      # 기여 및 개발 지침
 ```
 
@@ -29,7 +29,7 @@ Windows에서는 저장소 루트에서 다음을 실행합니다.
 powershell -ExecutionPolicy Bypass -File .\scripts\run-web.ps1
 ```
 
-Python 3 또는 Node.js가 로컬 서버로 사용되며 기본 주소는 `http://localhost:8000/istqb_ctfl_7day_learning.html`입니다. 로케일 도구는 Node.js 22.5 이상이 필요합니다.
+Python 3 또는 Node.js가 로컬 서버로 사용되며 `web/` 폴더를 제공합니다. 기본 주소는 `http://localhost:8000/`입니다. `web/index.html`을 브라우저에서 직접 열 수도 있습니다. 로케일 도구는 Node.js 22.5 이상이 필요합니다.
 
 ## 문구 수정
 

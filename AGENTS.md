@@ -1,8 +1,8 @@
-﻿# 저장소 기여 지침
+# 저장소 기여 지침
 
 ## 프로젝트 구성
 
-이 저장소는 ISTQB CTFL v4.0.1 한국어 학습 자료 모음입니다. 학습 웹과 시험 데이터는 `istqb_ctfl_7day_learning.html`에 내장되어 있습니다. 화면은 DAY 01~06 통합 Issue 풀이·개념 복습과 DAY 07 모의고사로 구성됩니다. `content/locales.sqlite`는 UI 문구 번역 DB이고 `content/migrations/`에는 초기 스키마와 리소스가 있습니다. `scripts/`에는 리소스 조회·수정·빌드 및 로컬 웹 서버 스크립트가 있습니다. 공식 샘플 시험 A~D 160문항과 A 세트 추가 문항 26개 및 도표 이미지는 HTML에 내장되어 별도 샘플 시험 폴더 없이 동작합니다.
+이 저장소는 ISTQB CTFL v4.0.1 한국어 학습 자료 모음입니다. 학습 웹과 시험 데이터는 `web/index.html`에 내장되어 있습니다. 화면은 DAY 01~06 통합 Issue 풀이·개념 복습과 DAY 07 모의고사로 구성됩니다. `content/locales.sqlite`는 UI 문구 번역 DB이고 `content/migrations/`에는 초기 스키마와 리소스가 있습니다. `scripts/`에는 리소스 조회·수정·빌드 및 로컬 웹 서버 스크립트가 있습니다. 공식 샘플 시험 A~D 160문항과 A 세트 추가 문항 26개 및 도표 이미지는 HTML에 내장되어 별도 샘플 시험 폴더 없이 동작합니다.
 
 ## 실행 및 개발 명령
 
