@@ -1,0 +1,18 @@
+import { readFileSync, writeFileSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { DatabaseSync } from 'node:sqlite';
+import { createHash } from 'node:crypto';
+const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
+const file=path.join(root,'web','index.html');
+let html=readFileSync(file,'utf8');
+const previousHash=createHash('sha256').update(html).digest('hex');
+const source=readFileSync(path.join(root,'scripts','global-editor.js'),'utf8');
+const script='<script id="globalTextEditor">\n'+source+'\n</script>';
+if(html.includes('<script id="globalTextEditor">'))html=html.replace(/<script id="globalTextEditor">[\s\S]*?<\/script>/,()=>script);
+else html=html.replace('</body>',()=>script+'\n</body>');
+writeFileSync(file,html,'utf8');
+const db=new DatabaseSync(path.join(root,'content','locales.sqlite'));
+if(db.prepare("SELECT 1 FROM sqlite_master WHERE name='study_export'").get())db.prepare('UPDATE study_export SET hash=? WHERE filename=? AND hash=?').run(createHash('sha256').update(html).digest('hex'),'web/index.html',previousHash);
+db.close();
+console.log('웹 전체 문구 편집기 내장 완료');

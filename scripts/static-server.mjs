@@ -8,7 +8,7 @@ import { createStudyStore } from './study-store.mjs';
 const root = path.resolve(process.argv[2] ?? path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', 'web'));
 const port = Number(process.argv[3] ?? 8000);
 buildGoogleAnswers();
-const studyStore = createStudyStore();
+const studyStore = createStudyStore(undefined,{deferExports:true});
 function sendJson(response, status, data) {
   response.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
   response.end(JSON.stringify(data));
@@ -29,6 +29,25 @@ createServer(async (request, response) => {
     pathname = decodeURIComponent(new URL(request.url, 'http://localhost').pathname);
   } catch {
     response.writeHead(400).end('Bad Request');
+    return;
+  }
+
+  if (pathname.startsWith('/api/texts')) {
+    const origin = request.headers.origin;
+    if (origin && origin !== `http://${request.headers.host}`) { sendJson(response,403,{error:'다른 사이트에서는 변경할 수 없습니다.'}); return; }
+    try {
+      const content = studyStore.content();
+      if (request.method === 'GET' && pathname === '/api/texts') sendJson(response,200,{records:content.catalogue()});
+      else if (request.method === 'GET' && pathname === '/api/texts/history') sendJson(response,200,{history:content.history()});
+      else if (request.method === 'GET' && pathname === '/api/texts/export-state') sendJson(response,200,content.exportState());
+      else if (request.method === 'POST' && ['/api/texts/batch','/api/texts/restore','/api/texts/export'].includes(pathname)) {
+        if (request.headers['content-type'] !== 'application/json') { sendJson(response,415,{error:'JSON 형식이 필요합니다.'}); return; }
+        let size=0; const chunks=[];
+        for await (const chunk of request) { size+=chunk.length; if(size>10_000_000){sendJson(response,413,{error:'변경 요청이 너무 큽니다.'});return} chunks.push(chunk); }
+        let data; try { data=JSON.parse(Buffer.concat(chunks).toString('utf8')); } catch { sendJson(response,400,{error:'잘못된 JSON입니다.'});return; }
+        sendJson(response,200,pathname.endsWith('/batch')?content.batch(data.changes):pathname.endsWith('/restore')?content.restore(data.batchId,data.versions):content.retryExport());
+      } else sendJson(response,405,{error:'지원하지 않는 요청입니다.'});
+    } catch(error) { sendJson(response,error.status??500,{error:error.status?error.message:'문구 DB 처리에 실패했습니다.'}); }
     return;
   }
 

@@ -2,6 +2,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { DatabaseSync } from 'node:sqlite';
+import { createHash, randomUUID } from 'node:crypto';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const databasePath = path.join(root, 'content', 'locales.sqlite');
@@ -20,7 +21,15 @@ const metadata = db.prepare('SELECT locale, display_name, direction FROM locale_
 if (!metadata) throw new Error(`Locale '${locale}' is not registered in ${path.relative(root, databasePath)}.`);
 
 const rows = db.prepare('SELECT resource_key, value FROM locale_resource WHERE locale = ? ORDER BY resource_key').all(locale);
-db.close();
+if(locale==='ko'&&db.prepare("SELECT 1 FROM sqlite_master WHERE name='study_text'").get()){
+  db.exec('BEGIN IMMEDIATE');
+  try{
+    let changed=false;
+    for(const row of rows){const result=db.prepare('UPDATE study_text SET value=?,version=version+1 WHERE id=? AND value!=?').run(row.value,'localeResourcesJSON:resources/'+row.resource_key,row.value);if(result.changes)changed=true}
+    if(changed)db.prepare('INSERT INTO study_meta VALUES (?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value').run('content-pending',randomUUID());
+    db.exec('COMMIT');
+  }catch(error){db.exec('ROLLBACK');db.close();throw error}
+}
 const resources = Object.fromEntries(rows.map(({ resource_key, value }) => [resource_key, value]));
 const missing = requiredKeys.filter((key) => typeof resources[key] !== 'string');
 if (missing.length) throw new Error(`Missing ${locale} resources: ${missing.join(', ')}`);
@@ -42,4 +51,6 @@ if (existingStart >= 0) {
 }
 
 if (output !== html) writeFileSync(htmlPath, output, 'utf8');
+if(db.prepare("SELECT 1 FROM sqlite_master WHERE name='study_export'").get())db.prepare('UPDATE study_export SET hash=? WHERE filename=? AND hash=?').run(createHash('sha256').update(output).digest('hex'),'web/index.html',createHash('sha256').update(html).digest('hex'));
+db.close();
 process.stdout.write(`Embedded ${rows.length} ${locale} resources (${requiredKeys.length} referenced keys) into ${path.basename(htmlPath)}.\n`);

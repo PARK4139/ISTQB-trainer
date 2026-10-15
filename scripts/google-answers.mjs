@@ -1,77 +1,52 @@
-import { readFileSync, writeFileSync, renameSync } from 'node:fs';
-import { createHash } from 'node:crypto';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createStudyStore } from './study-store.mjs';
 
-const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const answersPath = path.join(repoRoot, 'content', 'google-ai-answers.json');
-const htmlPath = path.join(repoRoot, 'web', 'index.html');
-
-function loadData() {
-  const html = readFileSync(htmlPath, 'utf8');
-  const match = html.match(/<script id="appData" type="application\/json">([\s\S]*?)<\/script>/);
-  if (!match) throw new Error('학습 문항을 찾지 못했습니다.');
-  const { daily, mock } = JSON.parse(match[1]);
-  const questions = new Map([...daily, ...mock].map(question => [question.id, question.question]));
-  for (const question of daily) {
-    if (question.general) questions.set(question.general.id, question.general.query);
-  }
-  const answers = JSON.parse(readFileSync(answersPath, 'utf8'));
-  return { html, questions, answers };
-}
-
-function answerState(id, questions, answers) {
-  if (!questions.has(id)) throw Object.assign(new Error('문항을 찾지 못했습니다.'), { status: 404 });
-  const record = Object.hasOwn(answers, id) ? answers[id] : null;
-  const revision = createHash('sha256').update(JSON.stringify(record)).digest('hex');
-  const current = record?.question === questions.get(id);
-  return { id, answer: current ? record.answer : '', updatedAt: current ? record.updatedAt : null, source: current ? record.source || 'manual' : null, sourceUrl: current ? record.sourceUrl || '' : '', references: current ? record.references || [] : [], revision };
-}
-
-function embed(html, questions, answers) {
-  const states = Object.fromEntries([...questions.keys()].map(id => [id, answerState(id, questions, answers)]));
-  const json = JSON.stringify(states).replace(/</g, '\\u003c').replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029');
-  const payload = `<script id="googleAnswersJSON" type="application/json">${json}</script>`;
-  const existing = /<script id="googleAnswersJSON" type="application\/json">[\s\S]*?<\/script>/;
-  return existing.test(html) ? html.replace(existing, () => payload) : html.replace('<script id="notesEditorLibrary">', () => `${payload}\n<script id="notesEditorLibrary">`);
+let studyStore;
+const invokedAsCli=process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url);
+function repository() { return (studyStore ??= createStudyStore(undefined,{deferExports:!invokedAsCli})).content(); }
+function databaseAnswers() {
+  const content=repository(), values=content.documents().googleAnswersJSON;
+  const rows=new Map(content.catalogue().filter(row=>row.kind==='googleAnswersJSON').map(row=>[JSON.parse(row.path)[0],row]));
+  return Object.fromEntries(Object.entries(values).map(([id,state])=>{
+    const row=rows.get(id);
+    return [id,{...state,revision:String(row?.version??0),userModified:!!row&&row.original!==row.value,source:state.source||(state.answer?'manual':null)}];
+  }));
 }
 
 export function getGoogleAnswer(id) {
-  const { questions, answers } = loadData();
-  return answerState(id, questions, answers);
+  const state=databaseAnswers()[id];
+  if(!state)throw Object.assign(new Error('문항을 찾지 못했습니다.'),{status:404});
+  return state;
 }
 
 export function getAllGoogleAnswers() {
-  const { questions, answers } = loadData();
-  return Object.fromEntries([...questions.keys()].map(id => [id, answerState(id, questions, answers)]));
+  return databaseAnswers();
 }
 
 export function getGoogleQuestions() {
-  return [...loadData().questions].map(([id, question]) => ({ id, question }));
+  const {daily,mock}=repository().documents().appData;
+  const questions=new Map([...daily,...mock].map(q=>[q.id,q.question]));
+  for(const q of daily)if(q.general)questions.set(q.general.id,q.general.query);
+  return [...questions].map(([id,question])=>({id,question}));
 }
 
 export function saveGoogleAnswer(id, answer, revision, metadata = {}) {
   if (typeof answer !== 'string' || answer.length > 50_000 || typeof revision !== 'string') {
     throw Object.assign(new Error('답변은 5만 자 이하의 텍스트로 입력해 주세요.'), { status: 400 });
   }
-  const { html, questions, answers } = loadData();
-  if (answerState(id, questions, answers).revision !== revision) {
+  const previous=getGoogleAnswer(id);
+  if (previous.revision !== revision) {
     throw Object.assign(new Error('다른 창에서 답변이 바뀌었습니다. 입력한 내용을 복사해 두고 새로고침해 주세요.'), { status: 409 });
   }
-  if (answer.trim()) answers[id] = { question: questions.get(id), answer: answer.trim(), updatedAt: new Date().toISOString(), source: metadata.source === 'google-browser' ? 'google-browser' : 'manual', sourceUrl: metadata.sourceUrl || '', references: metadata.references || [] };
-  else delete answers[id];
-  const output = embed(html, questions, answers);
-  writeFileSync(`${answersPath}.tmp`, `${JSON.stringify(answers, null, 2)}\n`, 'utf8');
-  renameSync(`${answersPath}.tmp`, answersPath);
-  writeFileSync(`${htmlPath}.tmp`, output, 'utf8');
-  renameSync(`${htmlPath}.tmp`, htmlPath);
-  return answerState(id, questions, answers);
+  repository().batch([{id:'google:'+id,value:answer.trim(),version:Number(revision)}]);
+  if(metadata.source==='google-browser')repository().captureGoogle(id,answer.trim(),metadata);
+  return getGoogleAnswer(id);
 }
 
 export function buildGoogleAnswers() {
-  const { html, questions, answers } = loadData();
-  const output = embed(html, questions, answers);
-  if (output !== html) writeFileSync(htmlPath, output, 'utf8');
+  // DB 원본을 다시 파일에서 가져오거나 수집 원문을 덮어쓰지 않는다.
+  databaseAnswers();
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
@@ -83,6 +58,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     process.stdout.write(JSON.stringify(pending, null, 2) + '\n');
   } else {
     buildGoogleAnswers();
+    repository().retryExport();
     process.stdout.write('Google AI 답변을 HTML에 반영했습니다.\n');
   }
 }

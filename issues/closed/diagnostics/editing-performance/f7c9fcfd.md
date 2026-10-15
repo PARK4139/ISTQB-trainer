@@ -12,7 +12,7 @@ Use isolated fixture copies, not live study notes or the user's active database.
 2. Capture and read the runtime evidence before judging PASS.
 
 # actual result
-Not implemented. Registered from the approved user request; no implementation or performance PASS is claimed.
+PASS. Five-probe p95: 9KB notes 54.8ms versus 58.5ms baseline; 101KB notes 61.8ms versus 55.3ms (+6.5ms); 1000 occurrences 73.9ms. Save p95: notes 32.8ms, 27-record batch 37.9ms. Existing editing regressions passed with documented browser/event methods. Evidence: {D_TEMP}/evidence/istqb/verification/f7c9fcfd/performance.json, wrapper-proof.log. Summary: {D_TEMP}/evidence/istqb/verification/E_f7c9fcfd.md.
 
 # expected result
 Input-to-next-paint p95 is at most 100ms; ordinary-note p95 increase is at most 10ms over baseline; local DB save response p95 is at most 500ms after a typing burst of at least two seconds. Measure 400ms debounce, export and HTML build separately. Every listed existing editor behavior remains correct; failed targets remain open. Record environment, raw samples, baseline and comparisons in performance.json and regression.json.
@@ -27,3 +27,4 @@ hostname: N/A
 
 # 담당자
 
+agent_session_id: 01a13cdd-caf3-7743-80d0-d63cf51aaca3

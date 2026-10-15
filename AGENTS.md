@@ -6,11 +6,13 @@
 
 ## 실행 및 개발 명령
 
-Node.js 22.5 이상에서 `node scripts/locales.mjs init`으로 번역 DB를 만들고 `node scripts/build-locales.mjs`로 DB의 UI 문구를 HTML에 내장합니다. 문구 조회는 `node scripts/locales.mjs list`, 개별 수정은 `node scripts/locales.mjs set ko issue.title "새 제목"`, 일괄 SQL 수정은 `node scripts/locales.mjs sql "UPDATE locale_resource SET value=replace(value,'old','new') WHERE locale='ko'"`를 사용한 뒤 빌드합니다. `powershell -ExecutionPolicy Bypass -File .\scripts\run-web.ps1`은 생성된 HTML을 로컬에서 실행합니다. 학습 메모는 로컬 Node.js 서버를 통해 notes/study-notes.md에 자동 저장하며 Git으로 관리합니다. 학습 상태는 브라우저 로컬 저장소에 저장됩니다. 자동화된 테스트 명령은 없습니다.
+Node.js 22.5 이상에서 `node scripts/locales.mjs init`으로 번역 DB를 만들고 `node scripts/build-locales.mjs`로 DB의 UI 문구를 HTML에 내장합니다. 문구 조회는 `node scripts/locales.mjs list`, 개별 수정은 `node scripts/locales.mjs set ko issue.title "새 제목"`, 일괄 SQL 수정은 `node scripts/locales.mjs sql "UPDATE locale_resource SET value=replace(value,'old','new') WHERE locale='ko'"`를 사용한 뒤 빌드합니다. `powershell -ExecutionPolicy Bypass -File .\scripts\run-web.ps1`은 생성된 HTML을 로컬에서 실행합니다. 학습 메모는 로컬 Node.js 서버를 통해 SQLite에 저장하고 `notes/study-notes.md`로 내보내 Git으로 관리합니다. 학습 상태는 브라우저 로컬 저장소에 저장됩니다. 저장 검증은 아래 테스트 명령을 사용합니다.
 
 ## 코딩 스타일 및 파일 이름
 
-Google AI 참고 답변은 `content/google-ai-answers.json`에서 Issue별로 관리합니다. 로컬 서버에서 답변을 저장하면 `web/index.html`에도 내장되므로 두 파일을 함께 커밋합니다. JSON을 직접 수정한 뒤에는 `node scripts/google-answers.mjs`로 내장 데이터를 갱신합니다. Google 답변은 연결된 브라우저 기능으로 검색 화면을 읽어 수집하며 별도 크롤러를 추가하지 않습니다. 저장된 답변을 우선 재사용하고, 검색 출처와 수집 시각을 유지합니다. 수식 표기를 정리하면 최초 수집 텍스트도 보관합니다. Google 답변은 자체 해설 및 공식 자료와 구분합니다.
+문구와 Google AI 참고 답변은 `content/locales.sqlite`의 고유 ID로 관리합니다. 최초 수집 파일 `content/google-ai-answers.json`과 이관한 원본은 보존하며, 재실행 시 원본 파일로 최신 DB를 덮어쓰지 않습니다. 편집 후 DB와 출력 파일 `content/study-content.json`, `web/index.html`을 함께 커밋합니다. 내보내기 재실행은 `node scripts/google-answers.mjs`입니다. Google 답변은 연결된 브라우저 기능으로 검색 화면을 읽어 수집하며 별도 크롤러를 추가하지 않습니다. 저장된 답변을 우선 재사용하고, 검색 출처와 수집 시각을 유지합니다. 수식 표기를 정리하면 최초 수집 텍스트도 보관합니다. Google 답변은 자체 해설 및 공식 자료와 구분합니다.
+
+웹 전체 편집은 고급설정에서 기본 OFF로 제공하며 Ctrl+Shift+L의 메모 전용 동작을 보존합니다. 편집기 원본은 `scripts/global-editor.js`이고 `node scripts/build-global-editor.mjs`로 단일 HTML에 내장합니다. 입력은 화면에 즉시 반영하고 DB 저장·출력 생성은 분리합니다. `node scripts/test-study-store.mjs`, `node scripts/test-content-store.mjs`로 임시 복제본 기반 저장 회귀를 검증합니다. 브라우저에서는 다중 편집·한글 조합·복구·탭 재렌더링을 확인합니다.
 
 “개념을 전혀 모르겠다”에서는 관련 강의의 개념·예시와 일반 개념용 Google 답변을 먼저 표시하고, 문제별 해설은 접어서 둡니다. 일반 개념 답변은 `appData.daily[].general`의 공유 ID(`G01`~`G28`)와 검색문을 기준으로 저장하며, 선택지를 포함한 문항별 답변과 혼용하지 않습니다.
 

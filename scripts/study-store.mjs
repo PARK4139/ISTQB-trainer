@@ -3,6 +3,7 @@ import { readFileSync, writeFileSync, renameSync, mkdirSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createContentRepository } from './content-repository.mjs';
 
 const defaultRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const hash = text => createHash('sha256').update(text).digest('hex');
@@ -12,7 +13,7 @@ function readOptional(filename) {
   catch (error) { if (error.code === 'ENOENT') return ''; throw error; }
 }
 
-export function createStudyStore(root = defaultRoot) {
+export function createStudyStore(root = defaultRoot, {deferExports=false} = {}) {
   mkdirSync(path.join(root, 'content'), { recursive: true });
   const notesPath = path.join(root, 'notes', 'study-notes.md');
   const db = new DatabaseSync(path.join(root, 'content', 'locales.sqlite'));
@@ -58,7 +59,9 @@ export function createStudyStore(root = defaultRoot) {
     db.prepare('UPDATE study_note SET exported_revision = ? WHERE id = ?').run(current.revision, 'main');
   }
   try { exportNotes(); } catch { /* 원본·DB를 보존하고 API 상태로 충돌을 전달한다. */ }
+  let content;
   return {
+    content() { return content ??= createContentRepository(db, root, noteState, exportNotes, deferExports); },
     readNotes: noteState,
     saveNotes(text, revision) {
       if (typeof text !== 'string' || typeof revision !== 'string') throw problem('메모와 버전이 필요합니다.', 400);
