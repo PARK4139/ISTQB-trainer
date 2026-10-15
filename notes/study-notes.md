@@ -15,33 +15,19 @@ user story > AC|BDD
 
 # ATDD (Acceptance Test-Driven Development)
 # goal : common Acceptance Criteria
-의사소통의 갭 해소: 비즈니스 담당자(기획자), 개발자, 테스터가 같은 요구사항을 공유하여 동상이몽을 방지
+의사소통 cost 해소: 비즈니스 담당자(기획자), 개발자, 테스터가 같은 요구사항을 공유하여 동상이몽을 방지
 # 코딩을 시작하기 전, 기획자, 개발자, 테스터가 동시적으로 모여 인수 조건(합격 기준)을 먼저 정합니다.
 user story > AC|BDD 
-
-
-
-# Exit Criteria
-if (jira issue priority(severity) very high count == 0): 
-  Test 종료()
-
-
-# test order prioritization 우선순위화
-ㄴ> Risk-based test prioritization
-Risk가 높은 기능이나 모듈을 먼저, 그리고 더 많이 테스트하도록 순서를 정하는 전략
-Risk 관리: 무리한 일정으로 인해 테스트를 대충 건너뛰어 결함이 발생하는 것을 방지합니다.
-
 
 
 # source freezing
 
 
 
-
-
 # test Estimation # test 공수 추정
 테스트 계획 단계에서 테스트에 투입될 노력(공수, Effort), 시간(일정), 비용, 자원을 과학적이고 논리적인 방법으로 예측하는 활동입니다.
 # goal : 테스트가 언제 끝나는가? test schedule 이 나옴.
+test monitoring > test estimation > test control 
 
 
 
@@ -68,6 +54,31 @@ PERT 공식은 통계학에서 비대칭적인 데이터를 다룰 때 쓰는 Be
 Beta Distribution의 평균 = mu =(O+4M+P)/6 
 이 공식은 확률 밀도 함수를 적분하여 중심 경향성을 도출하는 과정에서 수학적으로 증명된 값입니다. 프로젝트 관리 학자들(1950년대 PERT)이 실무자들이 어려운 통계 적분 기법을 쓰지 않고도 버튼만 눌러 계산할 수 있도록, Beta Distribution의 근사치 공식인 '4'와 '6'을 그대로 표준화하여 지금까지 전 세계적으로 사용하고 있습니다.
 __________________________________________________ agile PLM
+__________________________________________________ priority
+
+
+# test order prioritization 우선순위화
+ㄴ> Risk-based test prioritization
+Risk가 높은 기능이나 모듈을 먼저, 그리고 더 많이 테스트하도록 순서를 정하는 전략
+Risk 관리: 무리한 일정으로 인해 테스트를 대충 건너뛰어 결함이 발생하는 것을 방지합니다.
+__________________________________________________ Risk 
+테스트 서버 구축지연
+ㄴ> Project Risk
+
+
+ㄴ> Product Risk
+__________________________________________________ test
+priority, schedule, risk
+ㄴ> test monitoring
+
+
+# Exit Criteria
+if (jira issue priority(severity) very high count == 0): 
+  close_Test()
+ㄴ> test control 
+
+start_test()
+ㄴ> test control 
 __________________________________________________ 
 Jira Advanced Roadmaps
 CPM 활용
@@ -85,15 +96,15 @@ PERT는 Program Evaluation and Review Technique(프로젝트 평가 및 검토 �
 # PERT 공식 
 # 1950년대 미국 해군에서 만든 PERT 기법
 수많은 프로젝트 지연 데이터를 모아보니 
-대다수가 α=2, β=2 혹은 α=3, β=3 같은 형태의 베타 분포를 따르고 있었음 
-
+대다수가 α=2, β=2 혹은 α=3, β=3 같은 형태의 베타 분포를 따르고 있었음.
 
 # PERT 그래프
-
 __________________________________________________ Beta Distribution
 "시작(O)과 끝(P)이 막혀 있고, 한쪽으로 찌그러진 확률 그래프"일때, 수학적으로 통계
 
 
+__________________________________________________
+# Risk Priority
 결제 실패와 UI 색상 오류가 동시에 있으면 
 대개 결제 흐름 검증을 우선한다.
 
@@ -234,7 +245,8 @@ fixing function editing (기존 기능 수정)
 
 
 
-
-# Test Pyramid
+# Test Pyramid # 3 stage layer 
 goal: 최소한의 비용으로 가장 빠르게, 소프트웨어의 품질을 높이는 것
-테스트의 수준을 아래에서부터 단위(Unit) 테스트, 통합(Integration) 테스트, 시스템/E2E(End-to-End) 테스트의 3단계 계층 구조, 
+  /  E2E test    \
+ /Integration test \
+/    Unit test       \ 
