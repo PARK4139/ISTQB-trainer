@@ -558,7 +558,7 @@ const notesEditor=CodeMirror.fromTextArea(notesField,{
 new ResizeObserver(()=>notesEditor.refresh()).observe(document.querySelector('.notes-editor'));
 let notesRevision=null,notesSavedText='',notesSaveTimer=null,notesSaving=false,notesConflict=false;
 const notesHint=document.querySelector('.notes-head .notes-hint');
-notesHint.textContent='입력하면 notes/study-notes.md에 자동 저장됩니다.';
+notesHint.textContent='입력하면 DB에 저장하고 Markdown으로 내보냅니다.';
 function cacheNotes(){try{localStorage.setItem(NOTES_KEY,notesField.value)}catch{}}
 function updateNoteEditor(){
   cacheNotes();
@@ -577,7 +577,7 @@ async function saveNotesFile(){
     if(response.status===409){notesConflict=true;throw new Error('파일 변경 충돌 · 새로고침 필요')}
     if(!response.ok)throw new Error('파일 저장 실패 · 입력하여 재시도');
     const saved=await response.json();notesRevision=saved.revision;notesSavedText=text;
-    notesStatus.textContent='파일 저장됨 · '+new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    notesStatus.textContent=saved.exportPending?'DB 저장됨 · Markdown 내보내기 대기':'DB 저장됨 · '+new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
   }catch(error){notesStatus.textContent=error.message}
   finally{notesSaving=false}
   if(notesSavedText===text&&notesField.value!==text&&!notesConflict)void saveNotesFile();
@@ -590,6 +590,7 @@ async function loadNotesFile(){
     const saved=await response.json();
     if(typeof saved.text!=='string'||typeof saved.revision!=='string')throw new Error('잘못된 메모 응답');
     notesRevision=saved.revision;notesSavedText=saved.text;
+    if(saved.conflict){notesConflict=true;notesStatus.textContent='Markdown 외부 변경 충돌 · 메모 보존됨';return}
     if(notesField.value!==originalText){
       if(saved.text&&saved.text!==originalText){notesConflict=true;notesStatus.textContent='파일 메모 확인 필요 · 새로고침';return}
       updateNoteEditor();return;

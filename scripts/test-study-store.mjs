@@ -1,0 +1,80 @@
+import assert from 'node:assert/strict';
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, cpSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { spawn } from 'node:child_process';
+import { DatabaseSync } from 'node:sqlite';
+import { createStudyStore } from './study-store.mjs';
+
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const fixture = mkdtempSync(path.join(tmpdir(), 'ctfl-study-db-'));
+const notes = path.join(fixture, 'notes', 'study-notes.md');
+mkdirSync(path.dirname(notes), { recursive: true });
+const original = '학습 메모\r\n한글 · test (coverage)\n';
+writeFileSync(notes, original);
+let store = createStudyStore(fixture);
+const first = store.readNotes();
+assert.equal(first.text, original);
+assert.equal(first.conflict, false);
+const saved = store.saveNotes(original + '수정\n', first.revision);
+assert.equal(readFileSync(notes, 'utf8'), saved.text);
+assert.equal(saved.exportPending, false);
+assert.throws(() => store.saveNotes('stale', first.revision), { status: 409 });
+store.close();
+store = createStudyStore(fixture);
+assert.equal(store.readNotes().text, saved.text);
+const db = new DatabaseSync(path.join(fixture, 'content', 'locales.sqlite'));
+assert.equal(db.prepare('SELECT original_text FROM study_note_import').get().original_text, original);
+db.close();
+writeFileSync(notes, 'external edit');
+assert.equal(store.readNotes().conflict, true);
+assert.throws(() => store.saveNotes('lost', saved.revision), { status: 409 });
+assert.equal(readFileSync(notes, 'utf8'), 'external edit');
+store.close();
+store = createStudyStore(fixture);
+assert.equal(store.readNotes().text, saved.text);
+assert.equal(store.readNotes().conflict, true);
+writeFileSync(notes, saved.text);
+mkdirSync(notes + '.tmp');
+const pending = store.saveNotes('pending export', saved.revision);
+assert.equal(pending.exportPending, true);
+assert.ok(pending.exportError);
+store.close();
+rmSync(notes + '.tmp', { recursive: true });
+store = createStudyStore(fixture);
+assert.equal(store.readNotes().exportPending, false);
+assert.equal(readFileSync(notes, 'utf8'), 'pending export');
+store.close();
+
+// 실제 HTTP 경로도 복제본 서버로 검증한다. 사용자 서버와 DB는 변경하지 않는다.
+for (const name of ['scripts', 'web']) cpSync(path.join(root, name), path.join(fixture, name), { recursive: true });
+cpSync(path.join(root, 'content', 'google-ai-answers.json'), path.join(fixture, 'content', 'google-ai-answers.json'));
+const port = 18000 + Math.floor(Math.random() * 10000);
+const server = spawn(process.execPath, ['scripts/static-server.mjs', 'web', String(port)], { cwd: fixture, stdio: ['ignore', 'pipe', 'pipe'] });
+let output = '';
+try {
+  await new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error('서버 시작 시간 초과: ' + output)), 10000);
+    server.stdout.on('data', chunk => { output += chunk; if (output.includes('http://localhost:')) { clearTimeout(timer); resolve(); } });
+    server.stderr.on('data', chunk => { output += chunk; });
+    server.on('exit', code => { clearTimeout(timer); reject(new Error('서버 종료: ' + code + output)); });
+  });
+  const url = `http://127.0.0.1:${port}/api/notes`;
+  const previous = await (await fetch(url)).json();
+  assert.equal(previous.text, 'pending export');
+  const put = body => fetch(url, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  const response = await put({ text: 'HTTP 저장 한글', revision: previous.revision });
+  assert.equal(response.status, 200);
+  const after = await response.json();
+  assert.equal(after.text, 'HTTP 저장 한글');
+  assert.equal((await put({ text: 'stale', revision: previous.revision })).status, 409);
+  assert.equal((await fetch(url, { headers: { Origin: 'http://foreign.example' } })).status, 403);
+  assert.equal((await fetch(url, { method: 'PUT', body: '{}' })).status, 415);
+  assert.equal((await fetch(url, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: '{' })).status, 400);
+  assert.equal((await put({ text: 'x'.repeat(2_000_001), revision: after.revision })).status, 413);
+  assert.equal((await (await fetch(url)).json()).text, after.text);
+  console.log(JSON.stringify({ verdict: 'PASS', migration: 'exact bytes and preserved original', restart: 'PASS', repeatMigration: 'PASS', externalConflict: 'PASS', exportRecovery: 'PASS', httpSave: 'PASS', staleVersion: 'PASS', originAndInputGuards: 'PASS', fixture }));
+} finally {
+  server.kill();
+}

@@ -14,7 +14,7 @@ Google AI 참고 답변은 `content/google-ai-answers.json`에서 Issue별로 �
 
 “개념을 전혀 모르겠다”에서는 관련 강의의 개념·예시와 일반 개념용 Google 답변을 먼저 표시하고, 문제별 해설은 접어서 둡니다. 일반 개념 답변은 `appData.daily[].general`의 공유 ID(`G01`~`G28`)와 검색문을 기준으로 저장하며, 선택지를 포함한 문항별 답변과 혼용하지 않습니다.
 
-특별한 필요가 없다면 의존성 없는 단일 HTML 파일 구성을 유지합니다. 한국어가 깨지지 않도록 UTF-8 인코딩을 사용합니다. 기존 코드에 맞춰 마크업과 스크립트는 두 칸 들여쓰기를 사용하고, JavaScript 식별자는 명확한 camelCase, CSS 클래스는 kebab-case로 작성합니다. 학습 메모 파일 notes/study-notes.md는 저장소에 포함합니다. 그 밖의 학습 기록 파일은 테스트 픽스처로 의도해 추가하는 경우가 아니면 저장소에 넣지 않습니다.
+특별한 필요가 없다면 의존성 없는 단일 HTML 파일 구성을 유지합니다. 한국어가 깨지지 않도록 UTF-8 인코딩을 사용합니다. 기존 코드에 맞춰 마크업과 스크립트는 두 칸 들여쓰기를 사용하고, JavaScript 식별자는 명확한 camelCase, CSS 클래스는 kebab-case로 작성합니다. 메모의 저장 기준은 `content/locales.sqlite`의 `study_note`이며 `notes/study-notes.md`는 Git 검토용 출력입니다. 기존 Markdown은 최초에만 이관하며 외부 수정은 충돌로 처리합니다. DB와 Markdown은 저장소에 포함합니다. 그 밖의 학습 기록 파일은 테스트 픽스처로 의도해 추가하는 경우가 아니면 저장소에 넣지 않습니다.
 
 ## 테스트 지침
 

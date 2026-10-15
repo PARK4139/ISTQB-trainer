@@ -1,19 +1,14 @@
-import { createReadStream, statSync, readFileSync, mkdirSync, writeFileSync, renameSync } from 'node:fs';
-import { createHash } from 'node:crypto';
+import { createReadStream, statSync } from 'node:fs';
 import { createServer } from 'node:http';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { getGoogleAnswer, getAllGoogleAnswers, saveGoogleAnswer, buildGoogleAnswers } from './google-answers.mjs';
+import { createStudyStore } from './study-store.mjs';
 
 const root = path.resolve(process.argv[2] ?? path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', 'web'));
 const port = Number(process.argv[3] ?? 8000);
 buildGoogleAnswers();
-const notesPath = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', 'notes', 'study-notes.md');
-function readNotes() {
-  let text = '';
-  try { text = readFileSync(notesPath, 'utf8'); } catch (error) { if (error.code !== 'ENOENT') throw error; }
-  return { text, revision: createHash('sha256').update(text).digest('hex') };
-}
+const studyStore = createStudyStore();
 function sendJson(response, status, data) {
   response.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
   response.end(JSON.stringify(data));
@@ -80,7 +75,7 @@ createServer(async (request, response) => {
     }
     try {
       if (request.method === 'GET') {
-        sendJson(response, 200, readNotes());
+        sendJson(response, 200, studyStore.readNotes());
       } else if (request.method === 'PUT') {
         if (request.headers['content-type'] !== 'application/json') {
           sendJson(response, 415, { error: 'JSON 형식이 필요합니다.' });
@@ -102,21 +97,13 @@ createServer(async (request, response) => {
           sendJson(response, 400, { error: '메모와 버전이 필요합니다.' });
           return;
         }
-        if (data.revision !== readNotes().revision) {
-          sendJson(response, 409, { error: '다른 창이나 파일에서 메모가 변경되었습니다. 새로고침 후 확인하세요.' });
-          return;
-        }
-        mkdirSync(path.dirname(notesPath), { recursive: true });
-        const temporaryPath = `${notesPath}.tmp`;
-        writeFileSync(temporaryPath, data.text, 'utf8');
-        renameSync(temporaryPath, notesPath);
-        sendJson(response, 200, readNotes());
+        sendJson(response, 200, studyStore.saveNotes(data.text, data.revision));
       } else {
         sendJson(response, 405, { error: '지원하지 않는 요청입니다.' });
       }
     } catch (error) {
       console.error('메모 저장 오류:', error);
-      sendJson(response, 500, { error: '메모 파일을 읽거나 저장할 수 없습니다.' });
+      sendJson(response, error.status ?? 500, { error: error.status ? error.message : '메모 DB를 읽거나 저장할 수 없습니다.' });
     }
     return;
   }

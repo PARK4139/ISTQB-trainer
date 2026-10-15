@@ -4,7 +4,6 @@
 
 | 우선순위 | UUID | 근거 |
 |---|---|---|
-| High | 35b70340 | FR-01, AC-01; Migrate study notes to SQLite without losing existing content. |
 | High | df842f8f | FR-02, AC-02; Store editable learning text under stable database identities. |
 | High | 658b39eb | FR-02, FR-08, AC-11; Preserve original exam and Google text when applying user edits. |
 | High | 0dd4aee6 | FR-03, AC-03; Export committed database versions to reviewable text and offline HTML. |
